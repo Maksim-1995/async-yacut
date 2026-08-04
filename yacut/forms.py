@@ -1,19 +1,40 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField, URLField
-from wtforms.validators import DataRequired, Length, Optional
+from wtforms import MultipleFileField, StringField, SubmitField
+from wtforms.validators import DataRequired, Length, Optional, Regexp, URL
+
 
 class URLMapForm(FlaskForm):
-    original = StringField(
-        'Введите URL',
-        validators=[DataRequired(message='Обязательное поле'),
-                    Length(1, 128)]
+    """Форма для главной страницы: сокращение длинных ссылок."""
+
+    original_link = StringField(
+        'Длинная ссылка',
+        validators=[
+            DataRequired(message='Обязательное поле'),
+            URL(message='Введите корректный URL')
+        ]
     )
-    text = TextAreaField(
-        'Напишите мнение', 
+
+    custom_id = StringField(
+        'Ваш вариант короткой ссылки',
+        validators=[
+            Optional(),
+            Length(max=16, message='Не более 16 символов'),
+            Regexp(
+                r'^[a-zA-Z0-9]+$',
+                message='Указано недопустимое имя для короткой ссылки'
+            )
+        ]
+    )
+
+    submit = SubmitField('Создать')
+
+
+class FileForm(FlaskForm):
+    """Форма для страницы загрузки файлов на Яндекс Диск."""
+
+    files = MultipleFileField(
+        'Загрузите файлы',
         validators=[DataRequired(message='Обязательное поле')]
     )
-    source = URLField(
-        'Добавьте ссылку на подробный обзор фильма',
-        validators=[Length(1, 256), Optional()]
-    )
-    submit = SubmitField('Добавить') 
+
+    submit = SubmitField('Загрузить')

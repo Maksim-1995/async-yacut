@@ -1,40 +1,79 @@
-from random import randrange
+import asyncio
 
-from flask import abort, flash, redirect, render_template, url_for
+from flask import (
+    abort, current_app, flash, redirect, render_template, request
+)
 
 from . import app, db
-from .forms import URLMapForm
+from .forms import FileForm, URLMapForm
 from .models import URLMap
+from .utils import get_unique_short_id
+from .yandex_disk import upload_files_to_disk
 
-@app.route('/')
+# Идентификаторы, которые нельзя использовать как короткую ссылку,
+# так как они заняты маршрутами приложения.
+RESERVED_SHORT_IDS = ('files',)
+
+
+@app.route('/', methods=['GET', 'POST'])
 def index_view():
-    quantity = URLMap.query.count()
-    if not quantity:
-        abort(500)
-    offset_value = randrange(quantity)
-    url_map = URLMap.query.offset(offset_value).first()
-    return render_template('url_map.html', url_map=url_map)
-    
-
-@app.route('/add', methods=['GET', 'POST'])
-def add_url_map_view():
+    """Главная страница: преобразование длинных ссылок в короткие."""
     form = URLMapForm()
     if form.validate_on_submit():
-        text = form.text.data
-        if Opinion.query.filter_by(text=text).first() is not None:
-            flash('Такое мнение уже было оставлено ранее!')
-            return render_template('add_opinion.html', form=form)
-        opinion = Opinion(
-            title=form.title.data, 
-            text=text, 
-            source=form.source.data
-        )
-        db.session.add(opinion)
-        db.session.commit()
-        return redirect(url_for('opinion_view', id=opinion.id))
-    return render_template('add_opinion.html', form=form)
+        original_link = form.original_link.data
+        custom_id = form.custom_id.data
 
-@app.route('/opinions/<int:id>')
-def opinion_view(id):
-    opinion = Opinion.query.get_or_404(id)
-    return render_template('opinion.html', opinion=opinion) 
+        if custom_id:
+            # Если предложенный вариант уже занят или зарезервирован —
+            # сообщаем пользователю и не создаём запись.
+            if (
+                custom_id in RESERVED_SHORT_IDS
+                or URLMap.get(custom_id) is not None
+            ):
+                flash('Предложенный вариант короткой ссылки уже существует.')
+                return render_template('add_urls.html', form=form)
+        else:
+            # Если вариант не предложен — генерируем автоматически.
+            custom_id = get_unique_short_id()
+
+        url_map = URLMap(original=original_link, short=custom_id)
+        db.session.add(url_map)
+        db.session.commit()
+        return render_template('add_urls.html', form=form, url_map=url_map)
+
+    return render_template('add_urls.html', form=form)
+
+
+@app.route('/files', methods=['GET', 'POST'])
+def files_view():
+    """Страница асинхронной загрузки файлов на Яндекс Диск."""
+    form = FileForm()
+    uploaded_files = []
+
+    if form.validate_on_submit():
+        files = request.files.getlist('files')
+        token = current_app.config.get('DISK_TOKEN')
+
+        # Асинхронно загружаем файлы на Яндекс Диск.
+        results = asyncio.run(upload_files_to_disk(files, token))
+
+        for filename, download_link in results:
+            # Для каждого файла генерируем собственную короткую ссылку.
+            short_id = get_unique_short_id()
+            url_map = URLMap(original=download_link, short=short_id)
+            db.session.add(url_map)
+            db.session.commit()
+            uploaded_files.append((filename, url_map.short))
+
+    return render_template(
+        'files.html', form=form, uploaded_files=uploaded_files
+    )
+
+
+@app.route('/<short_id>')
+def redirect_view(short_id):
+    """Переадресация на исходный адрес по короткой ссылке."""
+    url_map = URLMap.get(short_id)
+    if url_map is None:
+        abort(404)
+    return redirect(url_map.original)
