@@ -4,6 +4,8 @@ from yacut import db
 
 
 class URLMap(db.Model):
+    """Модель для хранения соответствия между оригинальной и короткой ссылкой."""
+
     id = db.Column(db.Integer, primary_key=True)
     original = db.Column(db.Text, nullable=False)
     short = db.Column(db.String(16), unique=True, nullable=False)

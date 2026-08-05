@@ -1,6 +1,12 @@
+"""Формы веб-интерфейса сервиса YaCut."""
+
 from flask_wtf import FlaskForm
 from wtforms import MultipleFileField, StringField, SubmitField
-from wtforms.validators import DataRequired, Length, Optional, Regexp, URL
+from wtforms.validators import (
+    DataRequired, Length, Optional, Regexp, URL
+)
+
+from .utils import SHORT_ID_MAX_LENGTH, SHORT_ID_REGEX
 
 
 class URLMapForm(FlaskForm):
@@ -8,22 +14,22 @@ class URLMapForm(FlaskForm):
 
     original_link = StringField(
         'Длинная ссылка',
-        validators=[
+        validators=(
             DataRequired(message='Обязательное поле'),
             URL(message='Введите корректный URL')
-        ]
+        )
     )
 
     custom_id = StringField(
         'Ваш вариант короткой ссылки',
-        validators=[
+        validators=(
             Optional(),
-            Length(max=16, message='Не более 16 символов'),
+            Length(max=SHORT_ID_MAX_LENGTH, message='Не более 16 символов'),
             Regexp(
-                r'^[a-zA-Z0-9]+$',
+                SHORT_ID_REGEX,
                 message='Указано недопустимое имя для короткой ссылки'
             )
-        ]
+        )
     )
 
     submit = SubmitField('Создать')
@@ -34,7 +40,7 @@ class FileForm(FlaskForm):
 
     files = MultipleFileField(
         'Загрузите файлы',
-        validators=[DataRequired(message='Обязательное поле')]
+        validators=(DataRequired(message='Обязательное поле'),)
     )
 
     submit = SubmitField('Загрузить')
