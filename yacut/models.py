@@ -1,10 +1,12 @@
+"""Модель  сервиса YaCut."""
+
 from datetime import datetime
 
 from yacut import db
 
 
 class URLMap(db.Model):
-    """Модель для хранения соответствия между оригинальной и короткой ссылкой."""
+    """Модель соответствия между оригинальной и короткой ссылкой."""
 
     id = db.Column(db.Integer, primary_key=True)
     original = db.Column(db.Text, nullable=False)

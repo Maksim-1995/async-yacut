@@ -1,3 +1,5 @@
+"""API для работы с сервисом YaCut."""
+
 import re
 from http import HTTPStatus
 
