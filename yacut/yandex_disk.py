@@ -12,7 +12,7 @@ DOWNLOAD_LINK_URL = f'{API_HOST}{API_VERSION}/disk/resources/download'
 async def _upload_single_file(session, file_storage, auth_headers):
     """Загружает один файл на Яндекс Диск и возвращает ссылку на скачивание."""
     filename = file_storage.filename
-    path = f'app:/{filename}'
+    path = 'app:/' + filename
 
     # 1. Запрашиваем URL для загрузки файла.
     params = {'path': path, 'overwrite': 'True'}
