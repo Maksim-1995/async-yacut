@@ -33,9 +33,8 @@ async def _upload_single_file(session, file_storage, auth_headers):
 
     Возвращает кортеж ``(имя файла, ссылка на скачивание)``.
     """
-
     filename = file_storage.filename
-    path = 'app:/' + filename
+    path = 'app:/{}'.format(filename)
 
     params = {'path': path, 'overwrite': 'True'}
     async with session.get(
@@ -67,7 +66,6 @@ async def upload_files_to_disk(file_storages, token):
 
     Возвращает список кортежей ``(имя файла, ссылка на скачивание)``.
     """
-
     auth_headers = {'Authorization': f'OAuth {token}'}
     async with aiohttp.ClientSession() as session:
         tasks = (

@@ -1,18 +1,20 @@
 """Формы веб-интерфейса сервиса YaCut."""
 
 from flask_wtf import FlaskForm
-from wtforms import MultipleFileField, StringField, SubmitField
+from wtforms import (
+    MultipleFileField, StringField, SubmitField, URLField
+)
 from wtforms.validators import (
     DataRequired, Length, Optional, Regexp, URL
 )
 
-from .utils import SHORT_ID_MAX_LENGTH, SHORT_ID_REGEX
+from .short_id import SHORT_ID_MAX_LENGTH, SHORT_ID_REGEX
 
 
 class URLMapForm(FlaskForm):
     """Форма для главной страницы: сокращение длинных ссылок."""
 
-    original_link = StringField(
+    original_link = URLField(
         'Длинная ссылка',
         validators=(
             DataRequired(message='Обязательное поле'),

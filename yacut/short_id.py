@@ -1,19 +1,16 @@
-"""Вспомогательные функции и константы для сервиса YaCut."""
+"""Генерация и проверка коротких идентификаторов для сервиса YaCut."""
 
 import random
 import re
 import string
 
-from .models import URLMap
+from .models import SHORT_ID_MAX_LENGTH, URLMap
 
 # Допустимые символы для короткой ссылки.
 ALPHABET = string.ascii_letters + string.digits
 
 # Длина автоматически генерируемого short_id.
 SHORT_ID_LENGTH = 6
-
-# Максимальная длина короткого идентификатора.
-SHORT_ID_MAX_LENGTH = 16
 
 # Допустимый формат короткого идентификатора:
 # латинские буквы (верхнего и нижнего регистра) и цифры.
@@ -37,7 +34,6 @@ def get_unique_short_id():
     Если сгенерированный идентификатор уже существует в базе данных,
     генерация повторяется.
     """
-
     while True:
         short_id = ''.join(
             random.choices(ALPHABET, k=SHORT_ID_LENGTH)
@@ -52,7 +48,6 @@ def is_short_id_available(short_id):
     Идентификатор считается недоступным, если он зарезервирован
     (совпадает с маршрутом приложения) или уже существует в базе данных.
     """
-
     return (
         short_id not in RESERVED_SHORT_IDS
         and URLMap.get(short_id) is None

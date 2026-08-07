@@ -17,4 +17,4 @@ migrate = Migrate(app, db)
 with app.app_context():
     db.create_all()
 
-from . import api_views, utils, error_handlers, views
+from . import api_views, short_id, error_handlers, views
